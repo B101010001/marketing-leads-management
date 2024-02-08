@@ -1,0 +1,18 @@
+{
+    "name": "Marketing Leads Management",
+    "version": "1.0.0",
+    "description": "Marketing Leads Management V1.0",
+    "main": "index.js",
+    "scripts": {
+      "start": "electron .",
+      "package-win": "electron-packager . --overwrite --platform=win32 --arch=x64 --out=release-builds",
+      "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --out=release-builds"
+    },
+    "keywords": [],
+    "author": "B. P.",
+    "license": "MIT",
+    "devDependencies": {
+      "electron": "28.2.2",
+      "electron-packager": "17.1.2"
+    }
+  }  

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKETING LEADS MANAGEMENT V1.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 80%;
+            margin: 20px auto;
+            text-align: center;
+        }
+        input, select, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%; /* Adjusted width to 100% to fit within the container */
+            box-sizing: border-box;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ffffff;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        th, td.editable {
+            cursor: pointer;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        .author {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .action-buttons button {
+            margin: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MARKETING LEADS MANAGEMENT V1.0</h1>
+        
+        <!-- Form for entering lead details -->
+        <input type="text" id="companyName" placeholder="Company Name" required>
+        <input type="url" id="websiteUrl" placeholder="Website URL" required>
+        <input type="text" id="country" placeholder="Country" required>
+        <input type="text" id="industry" placeholder="Industry" required>
+        <input type="url" id="companyLinkedin" placeholder="Company LinkedIn Profile">
+        <input type="number" id="employeeCount" placeholder="Employee Count" required>
+        <input type="text" id="firstName" placeholder="First Name" required>
+        <input type="text" id="lastName" placeholder="Last Name" required>
+        <input type="text" id="title" placeholder="Title" required>
+        <input type="url" id="personLinkedin" placeholder="Person LinkedIn Profile">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="tel" id="mobileNumber" placeholder="Mobile Number" required>
+        <button onclick="addLead()">Add Lead</button>
+        <button onclick="addLeadWithMissingData()">Add Lead with Missing Data</button>
+
+        <!-- Table to display leads -->
+        <table id="leadsTable">
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Website URL</th>
+                    <th>Country</th>
+                    <th>Industry</th>
+                    <th>Company LinkedIn</th>
+                    <th>Employee Count</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Title</th>
+                    <th>Person LinkedIn</th>
+                    <th>Email</th>
+                    <th>Mobile Number</th>
+                    <th class="action-buttons">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Lead rows will be added here -->
+            </tbody>
+        </table>
+
+        <!-- Buttons for actions -->
+        <div>
+            <button onclick="exportToCSV()">Export to CSV</button>
+        </div>
+
+        <!-- Chart for visualization -->
+        <canvas id="leadsChart" width="400" height="200"></canvas>
+        <p class="author">Author: B. P.</p>
+    </div>
+
+    <script>
+        let leadsData = [];
+        let totalLeads = 0;
+        let qualifiedLeads = 0;
+        let leadsChart;
+
+        function addLead() {
+            if (!validateInputs()) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            const lead = {
+                companyName: document.getElementById('companyName').value,
+                websiteUrl: document.getElementById('websiteUrl').value,
+                country: document.getElementById('country').value,
+                industry: document.getElementById('industry').value,
+                companyLinkedin: document.getElementById('companyLinkedin').value || 'N/A',
+                employeeCount: parseInt(document.getElementById('employeeCount').value),
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                title: document.getElementById('title').value,
+                personLinkedin: document.getElementById('personLinkedin').value || 'N/A',
+                email: document.getElementById('email').value,
+                mobileNumber: document.getElementById('mobileNumber').value,
+                isQualified: false
+            };
+
+            leadsData.push(lead);
+            totalLeads++;
+
+            updateTable();
+            updateChart();
+        }
+
+        function addLeadWithMissingData() {
+            const lead = {
+                companyName: document.getElementById('companyName').value || 'N/A',
+                websiteUrl: document.getElementById('websiteUrl').value || 'N/A',
+                country: document.getElementById('country').value || 'N/A',
+                industry: document.getElementById('industry').value || 'N/A',
+                companyLinkedin: document.getElementById('companyLinkedin').value || 'N/A',
+                employeeCount: parseInt(document.getElementById('employeeCount').value) || 'N/A',
+                firstName: document.getElementById('firstName').value || 'N/A',
+                lastName: document.getElementById('lastName').value || 'N/A',
+                title: document.getElementById('title').value || 'N/A',
+                personLinkedin: document.getElementById('personLinkedin').value || 'N/A',
+                email: document.getElementById('email').value || 'N/A',
+                mobileNumber: document.getElementById('mobileNumber').value || 'N/A',
+                isQualified: false
+            };
+
+            leadsData.push(lead);
+            totalLeads++;
+
+            updateTable();
+            updateChart();
+        }
+
+        function removeLead(row) {
+            const index = row.parentNode.parentNode.rowIndex - 1;
+            leadsData.splice(index, 1);
+            totalLeads--;
+            updateTable();
+            updateChart();
+        }
+
+        function registerMQL(row) {
+            const index = row.parentNode.parentNode.rowIndex - 1;
+            if (!leadsData[index].isQualified) {
+                leadsData[index].isQualified = true;
+                qualifiedLeads++;
+            }
+            updateChart();
+        }
+
+        function updateTable() {
+            const tableBody = document.getElementById('leadsTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // Clear existing rows
+            leadsData.forEach((lead, index) => {
+                let row = tableBody.insertRow();
+                Object.keys(lead).forEach((key, i) => {
+                    let cell = row.insertCell(i);
+                    cell.textContent = lead[key];
+                    if (i > 0) { // Make cells editable except the first (Company Name) column
+                        cell.classList.add('editable');
+                        cell.setAttribute('contenteditable', 'true');
+                        cell.addEventListener('input', () => {
+                            lead[key] = cell.textContent;
+                        });
+                    }
+                });
+                let cell = row.insertCell();
+                cell.innerHTML = `<button onclick="removeLead(this)">Remove</button>${!lead.isQualified ? '<button onclick="registerMQL(this)">Mark the Lead</button>' : ''}`;
+            });
+        }
+
+        function exportToCSV() {
+            const csv = Papa.unparse({ data: leadsData, fields: Object.keys(leadsData[0]) });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            if (link.download !== undefined) { 
+                let url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "leads.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function updateChart() {
+            if (!leadsChart) {
+                let ctx = document.getElementById('leadsChart').getContext('2d');
+                leadsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Leads', 'Qualified Leads'],
+                        datasets: [{
+                            label: 'Leads',
+                            data: [totalLeads, qualifiedLeads],
+                            backgroundColor: ['lightblue', 'lightgreen']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } else {
+                leadsChart.data.datasets[0].data = [totalLeads, qualifiedLeads];
+                leadsChart.update();
+            }
+        }
+
+        function validateInputs() {
+            const requiredFields = ['companyName', 'websiteUrl', 'country', 'industry', 'employeeCount', 'firstName', 'lastName', 'title', 'email', 'mobileNumber'];
+            return requiredFields.every(field => document.getElementById(field).value.trim() !== '');
+        }
+
+        window.onload = updateChart;
+    </script>
+</body>
+</html>
