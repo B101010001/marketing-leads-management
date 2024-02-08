@@ -1,4 +1,3 @@
-```markdown
 # Marketing Leads Management V1.0
 
 Marketing Leads Management V1.0 is an Electron-based application designed for efficiently managing marketing leads. It offers a user-friendly interface for inputting and tracking lead information, visualizing data through charts, and exporting leads data. This tool is intended for businesses looking to streamline their marketing efforts.
@@ -56,4 +55,3 @@ Contributions to the project are welcome. Please follow the standard procedure o
 This project is licensed under the MIT License.
 
 Author: B.P.
-```
